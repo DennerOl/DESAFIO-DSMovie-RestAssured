@@ -1,8 +1,13 @@
 package com.devsuperior.dsmovie.controllers;
 
 import org.json.JSONException;
+import org.json.simple.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.devsuperior.dsmovie.tests.TokenUtil;
+
+import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
@@ -10,16 +15,40 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MovieControllerRA {
 
 	private String movieName;
 	private Long existingMovieId, nonExistingMovieId, dependentMovieId;
+	private String clientUsername, clientPassword, adminUsername, adminPassword;
+	private String adminToken, clientToken, invalidToken;
+
+	private Map<String, Object> postMovieInstance;
 
 	@BeforeEach
 	public void setup() throws JSONException {
 		baseURI = "http://localhost:8080";
 
 		movieName = "The Witcher";
+
+		postMovieInstance = new HashMap<>();
+		postMovieInstance.put("title", "Test Movie");
+		postMovieInstance.put("score", 1);
+		postMovieInstance.put("count", 1);
+		postMovieInstance.put("image",
+				"https://www.themoviedb.org/t/p/w533_and_h300_bestv2/jBJWaqoSCiARWtfV0GlqHrcdidd.jpg");
+
+		clientUsername = "alex@gmail.com";
+		clientPassword = "123456";
+		adminUsername = "maria@gmail.com";
+		adminPassword = "123456";
+
+		clientToken = TokenUtil.obtainAccessToken(clientUsername, clientPassword);
+		adminToken = TokenUtil.obtainAccessToken(adminUsername, adminPassword);
+		invalidToken = adminToken + "DE";
+
 	}
 
 	@Test
@@ -74,13 +103,52 @@ public class MovieControllerRA {
 
 	@Test
 	public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndBlankTitle() throws JSONException {
+
+		postMovieInstance.put("title", " ");
+		JSONObject newMovie = new JSONObject(postMovieInstance);
+
+		given()
+				.header("Content-type", "application/json")
+				.header("Authorization", "Bearer " + adminToken)
+				.body(newMovie)
+				.contentType(ContentType.JSON)
+				.accept(ContentType.JSON)
+				.when()
+				.post("/movies")
+				.then()
+				.statusCode(422)
+				.body("errors.message[0]", equalTo("Tamanho deve ser entre 5 e 80 caracteres"));
 	}
 
 	@Test
 	public void insertShouldReturnForbiddenWhenClientLogged() throws Exception {
+		JSONObject newMovie = new JSONObject(postMovieInstance);
+		given()
+				.header("Content-type", "application/json")
+				.header("Authorization", "Bearer " + clientToken)
+				.body(newMovie)
+				.contentType(ContentType.JSON)
+				.accept(ContentType.JSON)
+				.when()
+				.post("/movies")
+				.then()
+				.statusCode(403);
+
 	}
 
 	@Test
 	public void insertShouldReturnUnauthorizedWhenInvalidToken() throws Exception {
+
+		JSONObject newMovie = new JSONObject(postMovieInstance);
+		given()
+				.header("Content-type", "application/json")
+				.header("Authorization", "Bearer " + invalidToken)
+				.body(newMovie)
+				.contentType(ContentType.JSON)
+				.accept(ContentType.JSON)
+				.when()
+				.post("/movies")
+				.then()
+				.statusCode(401);
 	}
 }
