@@ -21,10 +21,14 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.devsuperior.dsmovie.dto.MovieDTO;
 import com.devsuperior.dsmovie.services.MovieService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping(value = "/movies")
+@Tag(name = "Movies", description = "Controller for Movie")
 public class MovieController {
 
 	@Autowired
@@ -32,7 +36,7 @@ public class MovieController {
 
 	@GetMapping
 	public Page<MovieDTO> findAll(
-			@RequestParam(value="title", defaultValue = "") String title, 
+			@RequestParam(value = "title", defaultValue = "") String title,
 			Pageable pageable) {
 		return service.findAll(title, pageable);
 	}
@@ -42,8 +46,16 @@ public class MovieController {
 		return service.findById(id);
 	}
 
+	@Operation(description = "Create a new movie", summary = "Create a new movie", responses = {
+			@ApiResponse(description = "Created", responseCode = "201"),
+			@ApiResponse(description = "Bad Request", responseCode = "400"),
+			@ApiResponse(description = "Unauthorized", responseCode = "401"),
+			@ApiResponse(description = "Forbidden", responseCode = "403"),
+			@ApiResponse(description = "Unprocessable Entity", responseCode = "422")
+	})
+
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
-	@PostMapping
+	@PostMapping(produces = "application/json")
 	public ResponseEntity<MovieDTO> insert(@Valid @RequestBody MovieDTO dto) {
 		dto = service.insert(dto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(dto.getId()).toUri();
