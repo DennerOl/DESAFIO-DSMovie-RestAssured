@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.devsuperior.dsmovie.dto.MovieDTO;
+import com.devsuperior.dsmovie.dto.MovieGenreDTO;
 import com.devsuperior.dsmovie.services.MovieService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -102,4 +103,25 @@ public class MovieController {
 		service.delete(id);
 		return ResponseEntity.noContent().build();
 	}
+
+	@Operation(description = "Get all movie", summary = "List all movie", responses = {
+			@ApiResponse(description = "OK", responseCode = "200"),
+	})
+	@GetMapping(produces = "application/vdn.dsmovie-v1+json")
+	public Page<MovieGenreDTO> findAllV1(
+			@RequestParam(value = "title", defaultValue = "") String title,
+			Pageable pageable) {
+		return service.findAllMovieGenre(title, pageable);
+	}
+
+	@Operation(description = "Get movie by id", summary = "Get movie by id", responses = {
+			@ApiResponse(description = "OK", responseCode = "200"),
+			@ApiResponse(description = "Not Found", responseCode = "404"),
+
+	})
+	@GetMapping(value = "/{id}", produces = "application/vdn.dsmovie-v1+json")
+	public MovieGenreDTO findByIdV1(@PathVariable Long id) {
+		return service.findByIdMovieGenre(id);
+	}
+
 }
