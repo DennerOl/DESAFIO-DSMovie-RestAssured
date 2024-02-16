@@ -5,6 +5,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.hateoas.Link;
 
 import com.devsuperior.dsmovie.entities.MovieEntity;
 
@@ -86,5 +87,10 @@ public class MovieGenreDTO {
 	public String toString() {
 		return "MovieGenreDTO [id=" + id + ", title=" + title + ", score=" + score + ", count=" + count + ", image=" + image
 				+ "]";
+	}
+
+	public Object add(Link withSelfRel) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'add'");
 	}
 }
