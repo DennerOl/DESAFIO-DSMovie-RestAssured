@@ -45,7 +45,13 @@ public class MovieService {
 	public MovieDTO findById(Long id) {
 		MovieEntity result = repository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Recurso não encontrado"));
-		return new MovieDTO(result);
+
+		MovieDTO dto = new MovieDTO(result)
+				.add(linkTo(methodOn(MovieController.class).findById(id)).withSelfRel())
+				.add(linkTo(methodOn(MovieController.class).findAll(null, null)).withRel("GET - Movies"))
+				.add(linkTo(methodOn(MovieController.class).update(id, null)).withRel("PUT - Update movie"))
+				.add(linkTo(methodOn(MovieController.class).delete(id)).withRel("DELETE - Delete movie"));
+		return dto;
 	}
 
 	@Transactional(readOnly = true)
@@ -60,7 +66,8 @@ public class MovieService {
 		MovieEntity entity = new MovieEntity();
 		copyDtoToEntity(dto, entity);
 		entity = repository.save(entity);
-		return new MovieDTO(entity);
+		return new MovieDTO(entity)
+				.add(linkTo(methodOn(MovieController.class).findById(entity.getId())).withRel("GET - Movie by Id"));
 	}
 
 	@Transactional
@@ -69,7 +76,8 @@ public class MovieService {
 			MovieEntity entity = repository.getReferenceById(id);
 			copyDtoToEntity(dto, entity);
 			entity = repository.save(entity);
-			return new MovieDTO(entity);
+			return new MovieDTO(entity)
+					.add(linkTo(methodOn(MovieController.class).findById(entity.getId())).withRel("GET - Movie by Id"));
 		} catch (EntityNotFoundException e) {
 			throw new ResourceNotFoundException("Recurso não encontrado");
 		}
